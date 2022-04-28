@@ -22,24 +22,24 @@ namespace gpr5300
 
 		float vertices[12] =
 		{
-			 -0.5f, 0.5f ,0.0f,
 			 -0.5f, -0.5f, 0.0f,
-			 0.5f, -0.5f, 0.0f,
-			0.5f, 0.5f, 0.0f
+			 -0.5f, 0.5f, 0.0f,
+			 0.5f, 0.5f, 0.0f,
+			0.5f, -0.5f, 0.0f
+		};
+
+		float texCords[8] =
+		{
+			0.0f, 1.0f,
+			0.0f, 0.0f,
+			1.0f, 0.0f,
+			1.0f, 1.0f,
 		};
 
 		unsigned int indices[6] =
 		{
 			0, 1, 3,
 			1, 2, 3
-		};
-
-		float colors[12] =
-		{
-			1.0f, 0.0f, 1.0f,
-			0.0f, 1.0f, 1.0f,
-			1.0f, 1.0f, 0.0f,
-			1.0f, 1.0f, 1.0f,
 		};
 
 	private:
@@ -49,11 +49,24 @@ namespace gpr5300
 		GLuint vao_ = 0;
 		GLuint ebo_ = 0;
 		GLuint vbo_[2] = {};
+		unsigned int texture_;
+		int texWidth_, texHeight_, nrChannels_;
+		unsigned char* data = stbi_load("data/textures/viper.jpg", &texWidth_, &texHeight_, &nrChannels_, 0);
 		float t = 0.0f;
+
 	};
 
 	void MyTriangle::Begin()
 	{
+
+		//Textures
+		if(!data)
+		{
+			std::cerr << "Failed to load texture!";
+		}
+		glGenTextures(1, &texture_);
+		glBindTexture(GL_TEXTURE_2D, texture_);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, texWidth_, texHeight_, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 
 		//EBO
 		glGenBuffers(1, &ebo_);
@@ -66,8 +79,16 @@ namespace gpr5300
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 		glGenBuffers(1, &vbo_[1]);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-		glBufferData(GL_ARRAY_BUFFER, sizeof(colors), colors, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, sizeof(texCords), texCords, GL_STATIC_DRAW);
 
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTextureParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		
 		//VAO
 		glGenVertexArrays(1, &vao_);
 		glBindVertexArray(vao_);
@@ -75,8 +96,10 @@ namespace gpr5300
 		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
 		glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-		glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(1);
+
+		
 
 		//Load shaders
 		const auto vertexContent = LoadFile("data/shaders/my_triangle/my_triangle.vert");
@@ -125,8 +148,10 @@ namespace gpr5300
 
 		glDeleteShader(vertexShader_);
 		glDeleteShader(fragmentShader_);
+		glDeleteTextures(1, &texture_);
 
 		glDeleteVertexArrays(1, &vao_);
+
 	}
 
 	void MyTriangle::Update(float dt)
@@ -134,9 +159,11 @@ namespace gpr5300
 		t += dt;
 
 		//Draw program
+
 		glUseProgram(program_);
-		const float colorValue = 0.6f + std::cosf(t + t) / 2;
-		glUniform1f(glGetUniformLocation(program_, "colorCoeff"), colorValue);
+		glUniform1i(glGetUniformLocation(program_, "ourTexture"), 0);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, 1);
 		glBindVertexArray(vao_);
 		glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, indices);
 		
@@ -147,7 +174,6 @@ namespace gpr5300
 
 int main(int argc, char** argv)
 {
-
 	gpr5300::MyTriangle scene;
 	gpr5300::Engine engine(&scene);
 	engine.Run();
