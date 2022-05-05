@@ -49,7 +49,6 @@ namespace gpr5300
                         glm::uvec2 newWindowSize;
                         newWindowSize.x = event.window.data1;
                         newWindowSize.y = event.window.data2;
-                        //TODO do something with the new size
                         glViewport(0, 0, newWindowSize.x, newWindowSize.y);
                         break;
                     }
@@ -65,7 +64,7 @@ namespace gpr5300
                 ImGui_ImplSDL2_ProcessEvent(&event);
             }
             glClearColor(0, 0, 0, 0);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             scene_->Update(dt.count());
 
