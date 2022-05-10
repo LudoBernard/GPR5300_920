@@ -1,11 +1,11 @@
 #version 300 es
-precision mediump float;
+precision highp float;
 
 layout (location = 0) out vec4 fragColor;
-in vec2 TexCoord;
 
-uniform sampler2D ourTexture;
+uniform vec3 lightColor;
+uniform vec3 objectColor;
 
 void main() {
-    fragColor = texture(ourTexture, TexCoord);
+    fragColor = vec4(lightColor * objectColor, 1.0);
 }
