@@ -66,8 +66,8 @@ namespace gpr5300
 
 			glGenBuffers(1, &vbo_[1]);
 			glBindBuffer(GL_ARRAY_BUFFER, vbo_[1]);
-			glBufferData(GL_ARRAY_BUFFER, sizeof(texCoords), texCoords, GL_STATIC_DRAW);
-			glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), (void*)0);
+			glBufferData(GL_ARRAY_BUFFER, sizeof(normals_), normals_, GL_STATIC_DRAW);
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 			glEnableVertexAttribArray(1);
 
 			//EBO
@@ -92,12 +92,16 @@ namespace gpr5300
 		{
 			glUseProgram(program);
 			const int objectColor = glGetUniformLocation(program, "objectColor");
-			glUniform3f(objectColor, 1.0f, 0.0f, 0.5f);
 			const int lightColor = glGetUniformLocation(program, "lightColor");
-			glUniform3f(lightColor, 0.5f, 0.5f, 0.5f);
-			model_ = rotate(model_, glm::radians(-1.0f), glm::vec3(1.0f, 1.0f, 0.0f));
+			const int lightPos = glGetUniformLocation(program, "lightPos");
+			const int viewPos = glGetUniformLocation(program, "viewPos");
+			glUniform3f(lightPos, 0.0f, 0.0f, 1.0f);
+			glUniform3f(objectColor, 0.5f, 0.0f, 1.0f);
+			glUniform3f(lightColor, 1.0f, 1.0f, 1.0f);
+			glUniform3f(viewPos, 0.0f, 0.0f, 0.0f);
+			
+			model_ = rotate(model_, glm::radians(0.0f), glm::vec3(1.0f, 0.0f, 0.0f));
 			projection_ = glm::perspective(glm::radians(45.f), (float)1280 / (float)720, 0.1f, 100.0f);
-			view_ = translate(view_, glm::vec3(0.0f, 0.0f, 0.0f));
 			// retrieve the matrix uniform locations
 			const unsigned int modelLoc = glGetUniformLocation(program, "model");
 			const unsigned int viewLoc = glGetUniformLocation(program, "view");
@@ -151,6 +155,50 @@ namespace gpr5300
 			   0.5f, -0.5f, 0.5f,
 			  -0.5f, -0.5f, 0.5f
 			 
+		};
+
+		float normals_[108] = {
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+			0.0f,  0.0f, 1.0f,
+
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+			1.0f,  0.0f,  0.0f,
+
+			0.0f, 1.0f,  0.0f,
+			0.0f, 1.0f,  0.0f,
+			0.0f, 1.0f,  0.0f,
+			0.0f, 1.0f,  0.0f,
+			0.0f, 1.0f,  0.0f,
+			0.0f, 1.0f,  0.0f,
+
+			0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f,
+			0.0f,  1.0f,  0.0f
 		};
 
 		unsigned int indices_[36] =
@@ -217,24 +265,6 @@ namespace gpr5300
 		glm::mat4 projection_ = glm::mat4(1.0f);
 	};
 
-	class Light
-	{
-	public:
-		void Generate(Mesh mesh)
-		{
-			glGenVertexArrays(1, &vao_);
-			glBindVertexArray(vao_);
-
-			glBindBuffer(GL_ARRAY_BUFFER, mesh.vbo_[0]);
-			// note that we update the lamp's position attribute's stride to reflect the updated buffer data
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-			glEnableVertexAttribArray(0);
-		}
-
-	private:
-		GLuint vao_ = 0;
-	};
-
 	class Pipeline
 	{
 	public:
@@ -271,7 +301,6 @@ namespace gpr5300
 			glAttachShader(mesh.program, fragmentShader_);
 			glLinkProgram(mesh.program);
 			//Check if shader program was linked correctly
-
 			glGetProgramiv(mesh.program, GL_LINK_STATUS, &success);
 			if (!success)
 			{
@@ -300,7 +329,6 @@ namespace gpr5300
 		Pipeline pipeline_;
 		Texture texture_;
 		Mesh mesh_;
-		Light light_;
 		float tt_ = 0.0f;
 	};
 
