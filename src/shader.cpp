@@ -62,10 +62,14 @@ namespace gpr5300
 			// delete the shaders as they're linked into our program now and no longer necessery
 			glDeleteShader(vertex);
 			glDeleteShader(fragment);
-
 	}
 
-	
+	void Shader::Delete()
+	{
+		glDeleteProgram(ID);
+	}
+
+
 	void Shader::Use() const
 	{
 		glUseProgram(ID);

@@ -19,7 +19,7 @@ namespace gpr5300
     {
         Begin();
         bool isOpen = true;
-
+        
         std::chrono::time_point<std::chrono::system_clock> clock = std::chrono::system_clock::now();
         while (isOpen)
         {
@@ -109,6 +109,7 @@ namespace gpr5300
             SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL
         );
         glRenderContext_ = SDL_GL_CreateContext(window_);
+        SDL_SetRelativeMouseMode(SDL_TRUE);
         //setting vsync
         SDL_GL_SetSwapInterval(1);
 
@@ -132,7 +133,6 @@ namespace gpr5300
         ImGui::StyleColorsClassic();
         ImGui_ImplSDL2_InitForOpenGL(window_, glRenderContext_);
         ImGui_ImplOpenGL3_Init("#version 300 es");
-
         scene_->Begin();
     }
 

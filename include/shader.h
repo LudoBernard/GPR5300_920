@@ -1,6 +1,8 @@
 #pragma once
 #include <gl/glew.h>
 #include <xstring>
+#include <glm/vec3.hpp>
+#include <glm/ext/matrix_float4x4.hpp>
 
 namespace gpr5300
 {
@@ -10,7 +12,8 @@ namespace gpr5300
 
 		unsigned int ID = 0;
 		void Load(const char* vertexPath, const char* fragmentPath);
-		
+		void Delete();
+
 		void Use() const;
 		void SetMatrix4(std::string_view uniform, glm::mat4& matrix4) const;
 		void SetVector3(std::string_view uniform, float x, float y, float z) const;

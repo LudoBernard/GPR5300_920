@@ -11,8 +11,11 @@ namespace gpr5300
 {
     unsigned int TextureFromFile(const char* path, const std::string& directory, bool gamma = false);
 
+   
+
     void Model::InitModel(const char* path)
     {
+
         stbi_set_flip_vertically_on_load(true);
         loadModel(path);
     }
@@ -25,11 +28,37 @@ namespace gpr5300
 		}
 	}
 
+    void Model::Draw(const Shader& pipeline, int amount) const
+    {
+
+            // draw mesh
+            for(const auto& mesh : meshes)
+            {
+                mesh.BindTexture(pipeline);
+                glBindVertexArray(mesh.vao_);
+                glDrawElementsInstanced(GL_TRIANGLES, mesh.indices.size(), GL_UNSIGNED_INT, 0, amount);
+            }
+                
+            glBindVertexArray(0);
+            glActiveTexture(GL_TEXTURE0);
+           
+    }
+
+	void Model::Delete()
+	{
+        for (unsigned int i = 0; i < meshes.size(); i++)
+        {
+            meshes[i].Delete();
+        }
+        meshes.clear();
+        textures_loaded.clear();
+	}
+
 
 	void Model::loadModel(const std::string& path)
 	{
 		Assimp::Importer import;
-		const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+		const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals);
 
 		if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 		{
@@ -91,6 +120,14 @@ namespace gpr5300
                 vec.y = mesh->mTextureCoords[0][i].y;
                 vertex.TexCoords = vec;
             }
+
+            if (mesh->HasTangentsAndBitangents())
+            {
+                vector.x = mesh->mTangents[i].x;
+                vector.y = mesh->mTangents[i].y;
+                vector.z = mesh->mTangents[i].z;
+                vertex.tangent = vector;
+            }
             else
                 vertex.TexCoords = glm::vec2(0.0f, 0.0f);
 
@@ -116,9 +153,7 @@ namespace gpr5300
         // 3. normal maps
         std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_HEIGHT, "texture_normal");
         textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
-        ////// 4. height maps
-        //std::vector<Texture> heightMaps = loadMaterialTextures(material, aiTextureType_AMBIENT, "texture_height");
-        //textures.insert(textures.end(), heightMaps.begin(), heightMaps.end());
+        
 
         // return a mesh object created from the extracted mesh data
         Mesh returnMesh;
